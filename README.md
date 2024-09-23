@@ -151,3 +151,114 @@ console.log(dobro); // [2, 4, 6, 8]
 
 Esses conceitos são fundamentais para entender e trabalhar com JavaScript de forma eficiente. Se precisar de mais detalhes sobre algum deles, posso aprofundar mais!
 
+<h1>Possíveis problemas</h1>
+
+Para que a lista de usuários adicionados no componente Add apareça na sua home.js, você precisará garantir que a lista dadosTable seja compartilhada entre os dois componentes. No momento, Home e Add têm seus próprios estados independentes, o que significa que as adições feitas em Add não são refletidas em Home.
+
+Aqui estão algumas maneiras de resolver isso:
+
+1. Usar um Componente Pai para Compartilhar Estado
+Uma abordagem comum em React é elevar o estado ao componente pai. Aqui está um exemplo de como você pode fazer isso:
+
+Criar um Componente Pai
+javascript
+Copiar código
+import React, { useState } from 'react';
+import Add from './Add'; // ajuste o caminho conforme necessário
+import Home from './Home'; // ajuste o caminho conforme necessário
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
+function App() {
+    const [dadosTable, setDadosTable] = useState(DadosTable);
+
+    return (
+        <Router>
+            <Routes>
+                <Route path="/" element={<Home dadosTable={dadosTable} setDadosTable={setDadosTable} />} />
+                <Route path="/create" element={<Add setDadosTable={setDadosTable} />} />
+            </Routes>
+        </Router>
+    );
+}
+
+export default App;
+2. Modificar o Componente Add
+Agora, modifique o seu componente Add para usar o setDadosTable que foi passado como uma prop:
+
+javascript
+Copiar código
+function Add({ setDadosTable }) {
+    // ... o resto do código
+    const AddUser = (newUser) => {
+        if (newUser.name && newUser.age && newUser.email) {
+            const newUserWithId = {
+                id: String(dadosTable.length + 1), // Gera um novo id baseado no comprimento do array
+                name: newUser.name,
+                age: newUser.age,
+                email: newUser.email
+            };
+            setDadosTable(prevDados => [...prevDados, newUserWithId]); // Atualiza a tabela de dados
+            history('/'); // Navega de volta para a página inicial
+        } else {
+            alert("Por favor, preencha todos os campos!");
+        }
+    };
+    // ... o resto do código
+}
+3. Modificar o Componente Home
+Atualize seu componente Home para usar a lista de usuários passada como props:
+
+javascript
+Copiar código
+function Home({ dadosTable, setDadosTable }) {
+    let history = useNavigate();
+
+    const DeleteFunction = (id) => {
+        const newTable = dadosTable.filter(item => item.id !== id);
+        setDadosTable(newTable);
+        history('/'); 
+    };
+
+    return (
+        <Fragment>
+            <div style={{margin:"20px"}}>
+                <Table>
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Idade</th>
+                            <th>Email</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {
+                            dadosTable.map((item) => (
+                                <tr key={item.id}>
+                                    <td>{item.name}</td>
+                                    <td>{item.age}</td>
+                                    <td>{item.email || 'N/A'}</td>
+                                    <td>
+                                        <Button onClick={() => alert(item.id)} variant="primary">Editar</Button>
+                                        <Button onClick={() => DeleteFunction(item.id)} variant="danger" style={{ marginLeft: "10px" }}>Excluir</Button>
+                                    </td>
+                                </tr>
+                            ))
+                        }
+                    </tbody>
+                </Table>
+                <br />
+                <Link to="/create">
+                    <Button>Create</Button>
+                </Link>
+            </div>
+        </Fragment>
+    );
+}
+
+export default Home;
+Resumo
+Com essas modificações, agora Home e Add compartilham o mesmo estado dadosTable. Quando um usuário é adicionado em Add, ele será refletido em Home quando você navegar de volta. Isso garante que as duas partes do seu aplicativo funcionem juntas corretamente.
+
+Se precisar de mais assistência, é só avisar!
+
